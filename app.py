@@ -32,7 +32,8 @@ for line in list(imdb_dataset['text']):
     for word in words:
         all_words.append(word.lower())
 
-hasil_crawl = pd.read_csv("hasil_crawl.csv", names=COLNAMES)
+hasil_crawl = imdb_dataset
+# hasil_crawl = pd.read_csv("hasil_crawl.csv", names=COLNAMES)
 # print(hasil_crawl)
 
 
