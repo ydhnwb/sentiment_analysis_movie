@@ -132,3 +132,5 @@ recheck_pos = hasil_test_ulang['label'][hasil_test_ulang.label == "Positive"]
 recheck_neg = hasil_test_ulang['label'][hasil_test_ulang.label == "Negative"]
 
 print("Hasil test ulang punya positive prediksi sebanyak : "+ str(len(recheck_pos)) +" dan negatif sebanyak " + str(len(recheck_neg)))
+
+
