@@ -1,6 +1,5 @@
 import tweepy
 import time
-import pandas as panda
 from twitter import Twitter
 from preprocessing import Preprocessing
 import csv
@@ -9,7 +8,7 @@ waitQuery = 100
 waitTime = 2.0
 engineBlow = 1
 Preprocessing = Preprocessing()
-csvFile = open('hasil_crawl.csv', 'w', encoding='utf-8')
+csvFile = open('movies_from_twitter.csv', 'w', encoding='utf-8')
 csvWriter = csv.writer(csvFile)
 
 def search() :
@@ -20,7 +19,6 @@ def search() :
     count = 0
     error = 0
     secondcount = 0
-    idvalues = [0] * total_number
     while secondcount < total_number:
         try:
             c = next(cursor)
@@ -37,6 +35,7 @@ def search() :
         try:
             text_val = c._json['full_text']
             text_val = str(text_val).lower()
+            text_val = Preprocessing.processTweet(text_val)
             if "rt" not in text_val:
                 if len(text_val) != 0:
                     secondcount += 1

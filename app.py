@@ -3,6 +3,7 @@ from sklearn.pipeline import Pipeline
 from preprocessing import Preprocessing
 from sklearn.externals import joblib
 import nltk
+import csv
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
@@ -24,7 +25,7 @@ def word_count(text):
 
 
 imdb_dataset["word_count"] = imdb_dataset["text"].apply(word_count)
-print(imdb_dataset)
+print("Dataset loaded successfully!")
 
 all_words = []
 for line in list(imdb_dataset['text']):
@@ -32,51 +33,39 @@ for line in list(imdb_dataset['text']):
     for word in words:
         all_words.append(word.lower())
 
-hasil_crawl = imdb_dataset
-# hasil_crawl = pd.read_csv("hasil_crawl.csv", names=COLNAMES)
-# print(hasil_crawl)
-
+dataset = imdb_dataset
 
 ####
 
-hasil_crawl.to_pickle("hasil_crawl.p")
-hasil_crawl_pickle = pd.read_pickle("hasil_crawl.p")
-hasil_crawl_pickle['text'] = hasil_crawl_pickle['text'].apply(Preprocessing.processTweet)
-hasil_crawl_pickle = hasil_crawl_pickle.drop_duplicates('text')
-hasil_crawl_pickle.shape
-
+dataset.to_pickle("dataset.p")
+dataset_pickle = pd.read_pickle("dataset.p")
+dataset_pickle['text'] = dataset_pickle['text'].apply(Preprocessing().processTweet)
+dataset_pickle_pickle = dataset_pickle.drop_duplicates('text')
+dataset_pickle.shape
 
 eng_stop_words = stopwords.words('english')
-hasil_crawl_pickle = hasil_crawl_pickle.copy()
-hasil_crawl_pickle['tokens'] = hasil_crawl_pickle['text'].apply(Preprocessing.text_process)
-print(hasil_crawl_pickle['tokens'])
+dataset_pickle = dataset_pickle.copy()
+dataset_pickle['tokens'] = dataset_pickle['text'].apply(Preprocessing().text_process)
 
+bow_transformer = CountVectorizer(analyzer=Preprocessing().text_process).fit(dataset_pickle['text'])
+messages_bow = bow_transformer.transform(dataset_pickle['text'])
+# print('Shape of Sparse Matrix: ', messages_bow.shape)
+# print('Amount of Non-Zero occurences: ', messages_bow.nnz)
+print("Dataset dibersihkan!")
+print("\nMulai train / test dengan perbandingan training 80% dan testing 20%")
+# test nya hanya 20%, training nya 80%
+X_train, X_test, y_train, y_test = train_test_split(imdb_dataset['text'], imdb_dataset['label'], test_size=0.2)
 
-# V
-bow_transformer = CountVectorizer(analyzer=Preprocessing.text_process).fit(hasil_crawl_pickle['text'])
-messages_bow = bow_transformer.transform(hasil_crawl_pickle['text'])
-print('Shape of Sparse Matrix: ', messages_bow.shape)
-print('Amount of Non-Zero occurences: ', messages_bow.nnz)
+pipeline = Pipeline([('bow', CountVectorizer(strip_accents='ascii', stop_words='english', lowercase=True)),('tfidf', TfidfTransformer()), ('classifier', MultinomialNB()), ])
 
-# X_train, X_test, y_train, y_test = train_test_split(data['text'], data['label'], test_size=0.2)
-X_train, X_test, y_train, y_test = train_test_split(imdb_dataset['text'][:1000], imdb_dataset['label'][:1000],test_size=0.2)
+parameters = {'bow__ngram_range': [(1, 1), (1, 2)], 'tfidf__use_idf': (True, False),'classifier__alpha': (1e-2, 1e-3), }
 
-pipeline = Pipeline([
-    ('bow', CountVectorizer(strip_accents='ascii', stop_words='english', lowercase=True)),
-    ('tfidf', TfidfTransformer()),
-    ('classifier', MultinomialNB()),
-])
-
-parameters = {'bow__ngram_range': [(1, 1), (1, 2)], 'tfidf__use_idf': (True, False),
-              'classifier__alpha': (1e-2, 1e-3), }
-
-# do 10-fold cross validation for each of the 6 possible combinations of the above params
 grid = GridSearchCV(pipeline, cv=10, param_grid=parameters, verbose=1)
 grid.fit(X_train, y_train)
 
 # hasil ->
-print("\nModel: %f using %s" % (grid.best_score_, grid.best_params_))
-print('\n')
+# print("\nModel: %f using %s" % (grid.best_score_, grid.best_params_))
+# print('\n')
 means = grid.cv_results_['mean_test_score']
 stds = grid.cv_results_['std_test_score']
 params = grid.cv_results_['params']
@@ -84,21 +73,18 @@ params = grid.cv_results_['params']
 #     print("Mean: %f Stdev:(%f) with: %r" % (mean, stdev, param))
 
 joblib.dump(grid, "model.pkl")
-#buat test model
+# buat test model
 model_NB = joblib.load("model.pkl")
 
-# get predictions from best model above
 y_preds = model_NB.predict(X_test)
 
-print('accuracy score: ', str(accuracy_score(y_test, y_preds)*100) + "%")
+print('akurasi dari train/test split: ', str(accuracy_score(y_test, y_preds) * 100) + "%")
 print('confusion matrix: \n', confusion_matrix(y_test, y_preds))
 print(classification_report(y_test, y_preds))
 
 # testing
 model_NB = joblib.load("model.pkl")
-
-#value random dari database imdb_labelled
-sample_str = "hello good morning, i need everyone to go out to your local theaters and i need you to watch avengers: endgame ... thanks"
+sample_str = "Shazam movie is very bad. I cant watch it"
 
 
 def label_to_str(x):
@@ -107,9 +93,9 @@ def label_to_str(x):
     else:
         return 'Positive'
 
+
 h = model_NB.predict([sample_str])
-print("Kalimat: \n\n'{}' \n\nhas a {} sentiment".format(sample_str, label_to_str(h[0])))
-# print("the sentence: \n\n'{}' \n\nhas a {} sentiment".format(review, sentiment_str(p[0])))
+print("Kalimat: \n\n'{}' \nhas a {} sentiment".format(sample_str, label_to_str(h[0])))
 
 
 x = 0
@@ -119,19 +105,66 @@ label_ = [0] * len(imdb_dataset)
 for review in imdb_dataset['text']:
     predict = model_NB.predict([review])
     text_[x] = review
-    label_[x] = label_to_str(predict[0])
+    label_[x] = predict[0]
     x += 1
 
 print("write ke csv")
 hehe = {"text": text_, "label": label_}
-hehe2 = pd.DataFrame(data= hehe)
+hehe2 = pd.DataFrame(data=hehe)
 hehe2.to_csv('test_ulang_dataset.csv', header=True, index=False, encoding='utf-8')
 hasil_test_ulang = pd.read_csv("test_ulang_dataset.csv", header='infer')
 hasil_test_ulang.columns = ['text', 'label']
 
-recheck_pos = hasil_test_ulang['label'][hasil_test_ulang.label == "Positive"]
-recheck_neg = hasil_test_ulang['label'][hasil_test_ulang.label == "Negative"]
+# recheck_pos = hasil_test_ulang['label'][hasil_test_ulang.label == "Positive"]
+# recheck_neg = hasil_test_ulang['label'][hasil_test_ulang.label == "Negative"]
+# print("Hasil test ulang punya positive prediksi sebanyak : "+ str(len(recheck_pos)) +" dan negatif sebanyak " + str(len(recheck_neg)))
 
-print("Hasil test ulang punya positive prediksi sebanyak : "+ str(len(recheck_pos)) +" dan negatif sebanyak " + str(len(recheck_neg)))
+i = 0
+# iya -> iya
+true_positive = 0
+# iya -> ora
+false_negative = 0
+# ora -> ora
+true_negative = 0
+# ora -> iya
+false_positive = 0
+for predicted_label in hasil_test_ulang['label']:
 
+    if imdb_dataset['label'][i] == 1:
+        if predicted_label == 1:
+            true_positive += 1
+        else:
+            false_negative += 1
+
+    if imdb_dataset['label'][i] == 0:
+        if predicted_label == 0:
+            true_negative += 1
+        else:
+            false_positive += 1
+    i += 1
+
+    # print(imdb_dataset['label'] == predicted_label)
+    # print(predicted_label == 1)
+print("True positive : " + str(true_positive))
+print("True negative : " + str(true_negative))
+print("False positive : " + str(false_positive))
+print("False negative : " + str(false_negative))
+
+# akurasi TP + TN / TP + FN + FP + TN
+# menampilkan seluruh row (1000 row), berbeda dengan library yang hanya mengambil sample 20% dr total row
+print("Akurasi =  " + str(
+    ((true_positive + true_negative) / (true_positive + false_negative + false_positive + true_negative)) * 100) + "%")
+print("Presisi = " + str((true_negative / (true_positive + false_positive)) * 100) + "%")
+print("Recall = " + str((true_negative / (true_positive + false_negative)) * 100) + "%")
+
+print("############################################################")
+print("test data from twitter")
+from_twitter = pd.read_csv("movies_from_twitter.csv")
+from_twitter.columns = ['id', 'tweet']
+csvFile = open('movies_from_twitter_predict.csv', 'w', encoding='utf-8')
+csvWriter = csv.writer(csvFile)
+for tweet in list(from_twitter['tweet']):
+    h = model_NB.predict([tweet])
+    csvWriter.writerow([str(tweet), label_to_str(h[0])])
+print("DONE!")
 
