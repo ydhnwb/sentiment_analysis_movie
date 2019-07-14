@@ -3,7 +3,6 @@ from sklearn.pipeline import Pipeline
 from preprocessing import Preprocessing
 from sklearn.externals import joblib
 import nltk
-import csv
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
@@ -11,6 +10,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 from sklearn.naive_bayes import MultinomialNB
+
 
 imdb_dataset = pd.read_csv("imdb_labelled.txt", sep="\t", header=None)
 imdb_dataset.columns = ['text', 'label']
@@ -84,19 +84,12 @@ print(classification_report(y_test, y_preds))
 
 # testing
 model_NB = joblib.load("model.pkl")
-sample_str = "Shazam movie is very bad. I cant watch it"
-
 
 def label_to_str(x):
     if x == 0:
         return 'Negative'
     else:
         return 'Positive'
-
-
-h = model_NB.predict([sample_str])
-print("Kalimat: \n\n'{}' \nhas a {} sentiment".format(sample_str, label_to_str(h[0])))
-
 
 x = 0
 text_ = [0] * len(imdb_dataset)
@@ -154,17 +147,7 @@ print("False negative : " + str(false_negative))
 # menampilkan seluruh row (1000 row), berbeda dengan library yang hanya mengambil sample 20% dr total row
 print("Akurasi =  " + str(
     ((true_positive + true_negative) / (true_positive + false_negative + false_positive + true_negative)) * 100) + "%")
-print("Presisi = " + str((true_negative / (true_positive + false_positive)) * 100) + "%")
-print("Recall = " + str((true_negative / (true_positive + false_negative)) * 100) + "%")
-
-print("############################################################")
-print("test data from twitter")
-from_twitter = pd.read_csv("movies_from_twitter.csv")
-from_twitter.columns = ['id', 'tweet']
-csvFile = open('movies_from_twitter_predict.csv', 'w', encoding='utf-8')
-csvWriter = csv.writer(csvFile)
-for tweet in list(from_twitter['tweet']):
-    h = model_NB.predict([tweet])
-    csvWriter.writerow([str(tweet), label_to_str(h[0])])
+print("Presisi = " + str((true_positive / (true_positive + false_positive)) * 100) + "%")
+print("Recall = " + str((true_positive / (true_positive + false_negative)) * 100) + "%")
 print("DONE!")
 

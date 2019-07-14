@@ -8,7 +8,7 @@ waitQuery = 100
 waitTime = 2.0
 engineBlow = 1
 Preprocessing = Preprocessing()
-csvFile = open('movies_from_twitter.csv', 'w', encoding='utf-8')
+csvFile = open('darkphoenix.csv', 'w', encoding='utf-8')
 csvWriter = csv.writer(csvFile)
 
 def search() :

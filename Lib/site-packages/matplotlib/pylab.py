@@ -143,7 +143,7 @@ _Matrix commands
   ones      - an array of ones
   rand      - an array from the uniform distribution [0,1]
   randn     - an array from the normal distribution
-  rot90     - rotate matrix k*90 degrees counterclockwise
+  rot90     - rotate matrix k*90 degress counterclockwise
   squeeze   - squeeze an array removing any dimensions of length 1
   tri       - a triangular matrix
   tril      - a lower triangular matrix
@@ -154,6 +154,7 @@ _Matrix commands
 
 _Probability
 
+  normpdf   - The Gaussian probability density function
   rand      - random numbers from the uniform distribution
   randn     - random numbers from the normal distribution
 
@@ -176,14 +177,14 @@ _Time series analysis
 
   bartlett  - M-point Bartlett window
   blackman  - M-point Blackman window
-  cohere    - the coherence using average periodogram
-  csd       - the cross spectral density using average periodogram
+  cohere    - the coherence using average periodiogram
+  csd       - the cross spectral density using average periodiogram
   fft       - the fast Fourier transform of vector x
   hamming   - M-point Hamming window
   hanning   - M-point Hanning window
   hist      - compute the histogram of x
   kaiser    - M length Kaiser window
-  psd       - the power spectral density using average periodogram
+  psd       - the power spectral density using average periodiogram
   sinc      - the sinc function of array x
 
 _Dates
@@ -195,6 +196,7 @@ _Dates
 _Other
 
   angle     - the angle of a complex array
+  griddata  - interpolate irregularly distributed data to a regular grid
   load      - Deprecated--please use loadtxt.
   loadtxt   - load ASCII data into array.
   polyfit   - fit x, y to an n-th order polynomial
@@ -229,7 +231,15 @@ from matplotlib.dates import (
 ## We are still importing too many things from mlab; more cleanup is needed.
 
 from matplotlib.mlab import (
-    demean, detrend, detrend_linear, detrend_mean, detrend_none,
+    amap, base_repr, binary_repr, bivariate_normal, center_matrix, csv2rec,
+    demean, detrend, detrend_linear, detrend_mean, detrend_none, dist,
+    dist_point_to_segment, distances_along_curve, entropy, exp_safe,
+    fftsurr, find, frange, get_sparse_matrix, get_xyz_where, griddata,
+    identity, inside_poly, is_closed_polygon, ispower2, isvector, l1norm,
+    l2norm, log2, longest_contiguous_ones, longest_ones, movavg, norm_flat,
+    normpdf, path_length, poly_below, poly_between, prctile, prctile_rank,
+    rec2csv, rec_append_fields, rec_drop_fields, rec_join, rk4, rms_flat,
+    segments_intersect, slopes, stineman_interp, vector_lengths,
     window_hanning, window_none)
 
 from matplotlib import cbook, mlab, pyplot as plt
